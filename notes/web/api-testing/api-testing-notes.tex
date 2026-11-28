@@ -1,0 +1,602 @@
+\documentclass[11pt,a4paper]{article}
+
+% ----------------------------------
+% Packages
+% ----------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[a4paper,top=2.1cm,bottom=2.1cm,left=2.25cm,right=2.25cm]{geometry}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{listingsutf8}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{float}
+\usepackage{upquote}
+
+% ----------------------------------
+% Document information
+% ----------------------------------
+\newcommand{\DocumentType}{Vulnerability Notes}
+\newcommand{\VulnerabilityTitle}{API Testing}
+\newcommand{\SourceName}{PortSwigger Web Security Academy}
+\newcommand{\SourceURL}{https://portswigger.net/web-security/api-testing}
+\newcommand{\AuthorName}{Youssef Reda}
+
+% ----------------------------------
+% Colors
+% ----------------------------------
+\definecolor{primary}{RGB}{25,55,95}
+\definecolor{secondary}{RGB}{75,95,120}
+\definecolor{linkblue}{RGB}{35,85,155}
+\definecolor{codegray}{RGB}{95,95,95}
+\definecolor{codebg}{RGB}{247,248,250}
+\definecolor{codeframe}{RGB}{210,216,224}
+
+% ----------------------------------
+% Code listings
+% ----------------------------------
+\lstset{
+    inputencoding=utf8,
+    basicstyle=\ttfamily\small,
+    backgroundcolor=\color{codebg},
+    frame=single,
+    rulecolor=\color{codeframe},
+    framesep=7pt,
+    xleftmargin=4pt,
+    xrightmargin=4pt,
+    aboveskip=8pt,
+    belowskip=8pt,
+    breaklines=true,
+    breakatwhitespace=false,
+    columns=fullflexible,
+    keepspaces=true,
+    showstringspaces=false,
+    tabsize=2
+}
+
+\lstdefinelanguage{JSON}{
+    basicstyle=\ttfamily\small,
+    numbers=none,
+    showstringspaces=false,
+    morestring=[b]",
+    stringstyle=\color{secondary}
+}
+
+\lstdefinelanguage{HTTP}{
+    basicstyle=\ttfamily\small,
+    numbers=none,
+    showstringspaces=false,
+    morestring=[b]",
+    stringstyle=\color{secondary},
+    morecomment=[l]{\#}
+}
+
+\lstdefinelanguage{JavaScript}{
+    language=Java,
+    basicstyle=\ttfamily\small,
+    numbers=none,
+    showstringspaces=false,
+    morekeywords={const,let,var,async,await,fetch,return,import,export,from},
+    keywordstyle=\color{primary}\bfseries,
+    stringstyle=\color{secondary},
+    morestring=[b]',
+    morestring=[b]"
+}
+
+% ----------------------------------
+% Hyperlinks and PDF metadata
+% ----------------------------------
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primary,
+    urlcolor=linkblue,
+    citecolor=primary,
+    pdftitle={\VulnerabilityTitle},
+    pdfauthor={\AuthorName}
+}
+
+\urlstyle{same}
+
+% ----------------------------------
+% Paragraphs, lists, and headings
+% ----------------------------------
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+
+\setlist[itemize]{
+    leftmargin=1.5em,
+    itemsep=2pt,
+    topsep=3pt
+}
+
+\setlist[enumerate]{
+    leftmargin=1.8em,
+    itemsep=2pt,
+    topsep=3pt
+}
+
+\titleformat{\section}
+  {\Large\bfseries\color{primary}}{}{0pt}{}
+
+\titleformat{\subsection}
+  {\large\bfseries\color{secondary}}{}{0pt}{}
+
+\titleformat{\subsubsection}
+  {\normalsize\bfseries}{}{0pt}{}
+
+\titlespacing*{\section}{0pt}{16pt}{6pt}
+\titlespacing*{\subsection}{0pt}{11pt}{4pt}
+\titlespacing*{\subsubsection}{0pt}{8pt}{3pt}
+
+% ----------------------------------
+% Unnumbered headings in Table of Contents
+% ----------------------------------
+\newcommand{\nsection}[1]{%
+  \section*{#1}%
+  \phantomsection%
+  \addcontentsline{toc}{section}{#1}%
+}
+
+\newcommand{\nsubsection}[1]{%
+  \subsection*{#1}%
+  \phantomsection%
+  \addcontentsline{toc}{subsection}{#1}%
+}
+
+\newcommand{\nsubsubsection}[1]{%
+  \subsubsection*{#1}%
+  \phantomsection%
+  \addcontentsline{toc}{subsubsection}{#1}%
+}
+
+\setcounter{tocdepth}{2}
+
+% ----------------------------------
+% Header and footer
+% ----------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+
+\fancyhead[L]{\small\textcolor{secondary}{Web Security Notes}}
+\fancyhead[R]{\small\textit{API Testing}}
+
+\fancyfoot[C]{\thepage}
+
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\setlength{\headheight}{14pt}
+
+% ----------------------------------
+% Document
+% ----------------------------------
+\begin{document}
+
+% ----------------------------------
+% Cover page
+% ----------------------------------
+\begin{titlepage}
+    \thispagestyle{empty}
+    \centering
+
+    \vspace*{1.8cm}
+    {\Large\color{secondary}\bfseries \DocumentType\par}
+
+    \vspace{1.2cm}
+    {\Huge\bfseries\color{primary}\VulnerabilityTitle\par}
+
+    \vspace{0.8cm}
+    {\large Concepts, Attack Techniques, Detection, and Defenses\par}
+
+    \vfill
+
+    \begin{flushleft}
+        \textbf{Reference}\\
+        \href{\SourceURL}{\SourceName}
+
+        \vspace{0.6cm}
+        \textbf{Prepared by}\\
+        \AuthorName
+    \end{flushleft}
+\end{titlepage}
+
+% ----------------------------------
+% Table of Contents
+% ----------------------------------
+\pagenumbering{roman}
+\tableofcontents
+
+\clearpage
+\pagenumbering{arabic}
+
+% ----------------------------------
+% Notes
+% ----------------------------------
+
+\nsection{OWASP API Security Top 10 Mapping}
+
+The OWASP API Security Top 10 identifies critical security risks specific to APIs. Many of these risks overlap with vulnerabilities covered in existing Web Security topics.
+The following table maps each OWASP API risk to its relevant Web Security Academy topics.
+
+\begin{longtable}{p{0.39\textwidth} p{0.55\textwidth}}
+    \toprule
+    \textbf{OWASP API Risk} & \textbf{Relevant Web Security Academy Topics} \\
+    \midrule
+    \endfirsthead
+
+    \toprule
+    \textbf{OWASP API Risk} & \textbf{Relevant Web Security Academy Topics} \\
+    \midrule
+    \endhead
+
+    API1: Broken Object Level Authorization
+                            &
+    Access Control Vulnerabilities and Privilege Escalation
+    \\
+
+    API2: Broken Authentication
+                            &
+    Authentication Vulnerabilities; OAuth 2.0 Authentication Vulnerabilities; JWT Attacks
+    \\
+
+    API3: Broken Object Property Level Authorization
+                            &
+    Mass Assignment Vulnerabilities
+    \\
+
+    API4: Unrestricted Resource Consumption
+                            &
+    Race Conditions; File Upload Vulnerabilities
+    \\
+
+    API5: Broken Function Level Authorization
+                            &
+    Access Control Vulnerabilities and Privilege Escalation
+    \\
+
+    API6: Unrestricted Access to Sensitive Business Flows
+                            &
+    Business Logic Vulnerabilities
+    \\
+
+    API7: Server Side Request Forgery
+                            &
+    Server-Side Request Forgery (SSRF)
+    \\
+
+    API8: Security Misconfiguration
+                            &
+    Cross-Origin Resource Sharing (CORS); Information Disclosure; HTTP Host Header Attacks; HTTP Request Smuggling
+    \\
+
+    API9: Improper Inventory Management
+                            &
+    API Testing
+    \\
+
+    API10: Unsafe Consumption of APIs
+                            &
+    API Testing
+    \\
+
+    \bottomrule
+\end{longtable}
+
+\newpage
+\nsection{API Recon}
+
+API reconnaissance is the process of gathering information about an API to identify its attack surface and understand how to interact with its endpoints.
+
+\nsubsection{Identifying API Endpoints}
+
+An API endpoint is a URL path where an API receives requests to interact with a specific resource.
+
+Example:
+\begin{lstlisting}[language=HTTP]
+GET /api/books HTTP/1.1
+Host: example.com
+\end{lstlisting}
+
+The endpoint is \texttt{/api/books}, which retrieves a list of books.
+
+During reconnaissance, identify the following information:
+\begin{itemize}
+    \item \textbf{Input Data:} Required and optional parameters processed by the API.
+    \item \textbf{HTTP Methods:} Supported methods, such as GET, POST, PUT, PATCH, and DELETE.
+    \item \textbf{Media Formats:} Supported formats, such as JSON and XML.
+    \item \textbf{Rate Limits:} Restrictions on the number of requests.
+    \item \textbf{Authentication:} Authentication mechanisms required to access endpoints.
+\end{itemize}
+
+\nsubsection{API Documentation}
+
+API documentation describes how developers can interact with and integrate APIs.
+
+There are two main types:
+\begin{itemize}
+    \item \textbf{Human-readable:} Designed for developers, providing explanations, examples, and usage scenarios.
+    \item \textbf{Machine-readable:} Structured formats that can be processed automatically, such as JSON and XML.
+\end{itemize}
+
+OpenAPI is a common specification for describing APIs, typically using JSON or YAML.
+
+Always review publicly available API documentation as an initial reconnaissance step.
+
+\newpage
+\nsubsection{Discovering API Documentation}
+
+Even when documentation is not publicly advertised, it may be accessible through the application that uses the API.
+
+Discovery techniques include:
+\begin{itemize}
+    \item Use Burp Scanner to crawl the application.
+    \item Browse the application manually using Burp Browser and inspect HTTP history.
+    \item Search for common documentation paths.
+    \item Use Burp Intruder with a wordlist of common paths.
+\end{itemize}
+
+Common documentation paths:
+\begin{lstlisting}
+ /api
+ /swagger/index.html
+ /openapi.json
+\end{lstlisting}
+
+\textbf{Parent Path Enumeration:}
+
+When an endpoint is discovered, investigate its parent paths to identify additional resources or documentation.
+
+For example, if the discovered endpoint is:
+\begin{lstlisting}
+/api/swagger/v1/users/123
+\end{lstlisting}
+
+Also investigate:
+\begin{lstlisting}
+/api/swagger/v1
+/api/swagger
+/api
+\end{lstlisting}
+
+\nsubsection{Analyzing Machine-readable Documentation}
+
+Machine-readable API documentation can be analyzed using automated tools to identify endpoints and understand their expected parameters and request formats.
+
+Useful tools include:
+\begin{itemize}
+    \item \textbf{Burp Scanner:} Crawls and audits OpenAPI documentation and other JSON or YAML documentation.
+    \item \textbf{OpenAPI Parser BApp:} Parses OpenAPI specifications within Burp Suite.
+    \item \textbf{Postman:} Imports API definitions and helps construct and send HTTP requests.
+    \item \textbf{SoapUI:} Tests APIs, particularly SOAP-based services.
+\end{itemize}
+
+\newpage
+\nsection{Identifying API Endpoints}
+
+\nsubsection{Discovering Endpoints Through the Application}
+
+Browsing applications that use an API can reveal additional endpoints, even when API documentation is available, as documentation may be outdated or inaccurate.
+
+Useful techniques include:
+\begin{itemize}
+    \item \textbf{Burp Scanner:} Crawl the application to discover endpoints.
+    \item \textbf{Burp Browser:} Manually browse the application and inspect HTTP traffic.
+    \item \textbf{JavaScript Analysis:} Review JavaScript files for API endpoint references that have not been triggered through normal browsing.
+\end{itemize}
+
+Burp Scanner automatically extracts some endpoints from JavaScript files. For more extensive extraction, use the JS Link Finder BApp or manually inspect the files.
+
+\nsubsection{Interacting with API Endpoints}
+
+Use Burp Repeater and Burp Intruder to interact with discovered endpoints and investigate their behavior.
+
+Test different:
+\begin{itemize}
+    \item HTTP methods.
+    \item Content types.
+    \item Parameters and input values.
+\end{itemize}
+
+Carefully examine HTTP responses and error messages, as they may disclose useful information about expected request formats, parameters, and input validation.
+
+\nsubsection{Identifying Supported HTTP Methods}
+
+HTTP methods specify the actions performed on resources.
+
+Common methods include:
+\begin{itemize}
+    \item \textbf{GET:} Retrieves a resource.
+    \item \textbf{POST:} Submits data or creates a resource.
+    \item \textbf{PUT:} Creates or replaces a resource.
+    \item \textbf{PATCH:} Applies partial modifications.
+    \item \textbf{DELETE:} Deletes a resource.
+    \item \textbf{OPTIONS:} Retrieves information about supported communication options, including HTTP methods.
+\end{itemize}
+
+A single endpoint may support multiple methods, exposing different functionalities.
+
+Example:
+\begin{lstlisting}[language=HTTP]
+GET /api/tasks
+POST /api/tasks
+DELETE /api/tasks/1
+\end{lstlisting}
+
+Use Burp Intruder's built-in HTTP verbs list to automatically test different methods against an endpoint.
+\textbf{Note:} Test potentially destructive methods against low-priority objects to avoid unintended modifications, deletions, or excessive record creation.
+
+\nsubsection{Identifying Supported Content Types}
+
+APIs may process input differently depending on the request's Content-Type header.
+
+Changing the Content-Type and reformatting the request body accordingly may help to:
+\begin{itemize}
+    \item Trigger errors that disclose useful information.
+    \item Bypass flawed security controls.
+    \item Identify differences in input processing and validation logic.
+\end{itemize}
+
+For example, an API may validate JSON input correctly but process XML using an insecure parser, potentially exposing vulnerabilities such as XXE.
+The Content Type Converter BApp can convert request bodies between JSON and XML formats.
+
+\nsubsection{Using Intruder to Find Hidden Endpoints}
+
+Burp Intruder can be used to enumerate hidden endpoints by replacing known path components with common function names.
+
+For example, if the following endpoint is discovered:
+\begin{lstlisting}[language=HTTP]
+PUT /api/user/update
+\end{lstlisting}
+
+Place \texttt{update} in an Intruder payload position and test alternative names:
+
+\begin{lstlisting}
+/api/user/delete
+/api/user/add
+/api/user/create
+/api/user/view
+\end{lstlisting}
+
+Use wordlists based on:
+\begin{itemize}
+    \item Common API naming conventions.
+    \item Industry-specific terminology.
+    \item Application functionality discovered during initial reconnaissance.
+\end{itemize}
+
+Application-specific wordlists are generally more useful than relying entirely on generic endpoint lists.
+
+\newpage
+\nsection{Finding Hidden Parameters}
+
+\nsubsection{Hidden Parameter Discovery}
+
+APIs may support undocumented parameters that are not exposed through the frontend or API documentation. Discovering these parameters can reveal additional functionality and potential vulnerabilities.
+
+Useful Burp Suite tools include:
+\begin{itemize}
+    \item \textbf{Burp Intruder:} Uses wordlists of common and application-specific parameter names to replace existing parameters or add new ones.
+    \item \textbf{Param Miner BApp:} Automatically guesses up to 65,536 parameter names per request, using information from the target scope.
+    \item \textbf{Content Discovery:} Discovers resources and content that are not linked from visible application content, including parameters.
+\end{itemize}
+
+\nsubsection{Mass Assignment Vulnerabilities}
+
+Mass Assignment (also known as Auto-binding) occurs when a framework automatically binds request parameters to fields of an internal object.
+If the application does not properly restrict which fields users can modify, attackers may modify unintended properties, potentially leading to privilege escalation or unauthorized data modification.
+
+\nsubsubsection{Identifying Hidden Parameters}
+
+Inspect API responses, particularly GET responses, to identify object properties that are not included in normal update requests.
+
+Example update request:
+\begin{lstlisting}[language=JSON]
+{
+    "username": "wiener",
+    "email": "wiener@example.com"
+}
+\end{lstlisting}
+
+Corresponding GET response:
+\begin{lstlisting}[language=JSON]
+{
+    "id": 123,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "isAdmin": false
+}
+\end{lstlisting}
+
+Properties such as \texttt{id} and \texttt{isAdmin} may be candidates for hidden parameter testing, as they appear in the returned object but are absent from the normal update request.
+
+\newpage
+\nsubsubsection{Testing Mass Assignment}
+
+To test whether hidden properties are bound to internal objects:
+
+\textbf{1. Submit the parameter with its current valid value:}
+
+\begin{lstlisting}[language=JSON]
+{
+    "username": "wiener",
+    "email": "wiener@example.com",
+    "isAdmin": false
+}
+\end{lstlisting}
+
+\textbf{2. Submit an invalid value:}
+
+\begin{lstlisting}[language=JSON]
+{
+    "username": "wiener",
+    "email": "wiener@example.com",
+    "isAdmin": "foo"
+}
+\end{lstlisting}
+
+Observe differences in responses and application behavior. Different responses may indicate that the parameter is being processed by the application.
+
+\textbf{3. Attempt to modify the property:}
+
+\begin{lstlisting}[language=JSON]
+{
+    "username": "wiener",
+    "email": "wiener@example.com",
+    "isAdmin": true
+}
+\end{lstlisting}
+
+Verify the result by retrieving the user object again and checking whether the property was actually modified.
+Finally, test whether the modified privileges provide access to administrative functionality.
+A successful modification of restricted properties may result in privilege escalation.
+
+\newpage
+\nsection{Preventing Vulnerabilities in APIs}
+
+\nsubsection{API Security Best Practices}
+
+When designing APIs, security should be considered from the beginning. Apply the following practices to reduce the API attack surface and prevent common vulnerabilities.
+
+\begin{itemize}
+    \item \textbf{Secure API Documentation:} Restrict access to API documentation when the API is not intended to be publicly accessible.
+    \item \textbf{Keep Documentation Updated:} Ensure documentation accurately reflects the API's current endpoints, HTTP methods, and parameters, providing legitimate testers with complete visibility of the attack surface.
+    \item \textbf{Allowlist HTTP Methods:} Explicitly permit only the HTTP methods required by each endpoint and reject unsupported methods.
+    \item \textbf{Validate Content Types:} Verify that incoming requests and outgoing responses use the expected content types.
+    \item \textbf{Use Generic Error Messages:} Avoid exposing internal implementation details, database errors, file paths, or sensitive information. Store technical details in server logs instead.
+    \item \textbf{Protect All API Versions:} Apply appropriate security controls to every active API version, including legacy versions, rather than protecting only the current production version.
+\end{itemize}
+
+\nsubsection{Preventing Mass Assignment}
+
+Mass assignment occurs when a framework automatically binds request parameters to internal object properties without sufficient restrictions.
+
+To prevent mass assignment vulnerabilities:
+\begin{itemize}
+    \item \textbf{Property Allowlist (Recommended):} Explicitly define the properties users are permitted to create or update. Reject or ignore all other properties.
+    \item \textbf{Property Blocklist:} Explicitly define sensitive properties that users must not modify, such as \texttt{isAdmin}, \texttt{role}, and \texttt{accountBalance}.
+\end{itemize}
+
+An allowlist is generally safer because only explicitly permitted properties can be modified. Newly introduced sensitive properties are not automatically exposed to user modification.
+
+\textbf{Example:}
+
+If users are only allowed to update their username and email, the application should accept:
+\begin{lstlisting}[language=JSON]
+{
+    "username": "wiener",
+    "email": "wiener@example.com"
+}
+\end{lstlisting}
+
+Properties such as \texttt{isAdmin} and \texttt{role} should remain controlled by server-side logic and must not be modifiable through user requests.
+
+\end{document}

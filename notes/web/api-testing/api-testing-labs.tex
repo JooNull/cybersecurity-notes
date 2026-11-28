@@ -1,0 +1,376 @@
+\documentclass[11pt,a4paper]{article}
+
+% ----------------------------------
+% Packages
+% ----------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[a4paper,top=2.1cm,bottom=2.1cm,left=2.25cm,right=2.25cm]{geometry}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{listingsutf8}
+\usepackage{bookmark}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{upquote}
+
+% ----------------------------------
+% Document information
+% ----------------------------------
+\newcommand{\DocumentType}{Lab Writeups}
+\newcommand{\VulnerabilityTitle}{API Testing}
+\newcommand{\SourceName}{PortSwigger Web Security Academy}
+\newcommand{\AuthorName}{Youssef Reda}
+
+% ----------------------------------
+% Colors
+% ----------------------------------
+\definecolor{primary}{RGB}{25,55,95}
+\definecolor{secondary}{RGB}{75,95,120}
+\definecolor{linkblue}{RGB}{35,85,155}
+\definecolor{codegray}{RGB}{95,95,95}
+\definecolor{codebg}{RGB}{247,248,250}
+\definecolor{codeframe}{RGB}{210,216,224}
+
+% ----------------------------------
+% Code listings
+% ----------------------------------
+\lstset{
+    inputencoding=utf8,
+    basicstyle=\ttfamily\small,
+    backgroundcolor=\color{codebg},
+    frame=single,
+    rulecolor=\color{codeframe},
+    framesep=7pt,
+    xleftmargin=4pt,
+    xrightmargin=4pt,
+    aboveskip=8pt,
+    belowskip=8pt,
+    breaklines=true,
+    breakatwhitespace=false,
+    columns=fullflexible,
+    keepspaces=true,
+    showstringspaces=false,
+    tabsize=2
+}
+
+\lstdefinelanguage{JavaScript}{
+    language=Java,
+    basicstyle=\ttfamily\small,
+    numbers=none,
+    showstringspaces=false,
+    morekeywords={const,let,var,async,await,fetch,return,import,export,from},
+    keywordstyle=\color{primary}\bfseries,
+    stringstyle=\color{secondary},
+    morestring=[b]',
+    morestring=[b]"
+}
+
+\lstdefinelanguage{JSON}{
+    basicstyle=\ttfamily\small,
+    numbers=none,
+    showstringspaces=false,
+    morestring=[b]",
+    stringstyle=\color{secondary}
+}
+
+\lstdefinelanguage{HTTP}{
+    basicstyle=\ttfamily\small,
+    numbers=none,
+    showstringspaces=false,
+    morestring=[b]",
+    stringstyle=\color{secondary},
+    morecomment=[l]{\#}
+}
+
+% ----------------------------------
+% Hyperlinks and PDF metadata
+% ----------------------------------
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primary,
+    urlcolor=linkblue,
+    citecolor=primary,
+    pdftitle={\VulnerabilityTitle},
+    pdfauthor={\AuthorName}
+}
+
+\urlstyle{same}
+
+% ----------------------------------
+% Paragraphs, lists, and headings
+% ----------------------------------
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+
+\setlist[itemize]{
+    leftmargin=1.5em,
+    itemsep=2pt,
+    topsep=3pt
+}
+
+\setlist[enumerate]{
+    leftmargin=1.8em,
+    itemsep=2pt,
+    topsep=3pt
+}
+
+\titleformat{\section}
+  {\Large\bfseries\color{primary}}{}{0pt}{}
+
+\titlespacing*{\section}{0pt}{16pt}{6pt}
+
+% ----------------------------------
+% Unnumbered headings in Table of Contents
+% ----------------------------------
+\newcommand{\nsection}[1]{%
+  \section*{#1}%
+  \phantomsection%
+  \addcontentsline{toc}{section}{#1}%
+}
+
+\setcounter{tocdepth}{1}
+
+% ----------------------------------
+% Header and footer
+% ----------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+
+\fancyhead[L]{\small\textcolor{secondary}{Web Security Notes}}
+\fancyhead[R]{\small\textit{API Labs}}
+
+\fancyfoot[C]{\thepage}
+
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\setlength{\headheight}{14pt}
+
+% ----------------------------------
+% Document
+% ----------------------------------
+\begin{document}
+
+% ----------------------------------
+% Cover page
+% ----------------------------------
+\begin{titlepage}
+    \thispagestyle{empty}
+    \centering
+
+    \vspace*{1.8cm}
+    {\Large\color{secondary}\bfseries \DocumentType\par}
+
+    \vspace{1.2cm}
+    {\Huge\bfseries\color{primary}\VulnerabilityTitle\par}
+
+    \vspace{0.8cm}
+    {\large PortSwigger Web Security Academy — Lab Solutions\par}
+
+    \vfill
+    \begin{flushleft}
+        \vspace{0.6cm}
+        \textbf{Prepared by}\par
+        \AuthorName
+    \end{flushleft}
+\end{titlepage}
+
+% ----------------------------------
+% Table of Contents
+% ----------------------------------
+\pagenumbering{roman}
+\tableofcontents
+
+\clearpage
+\pagenumbering{arabic}
+
+% ----------------------------------
+% Lab Writeups
+% ----------------------------------
+
+\nsection{Lab: Exploiting an API Endpoint Using Documentation}
+
+\begin{enumerate}
+    \item Log in to the application using the credentials \texttt{wiener:peter} and update your email address.
+    \item In \textbf{Proxy > HTTP history}, locate the \texttt{PATCH /api/user/wiener} request. Right-click it and select \textbf{Send to Repeater}.
+    \item In Repeater, send the request and observe that it retrieves credentials for the user \texttt{wiener}.
+    \item Remove \texttt{/wiener} from the request path:
+          \begin{lstlisting}[language=HTTP]
+PATCH /api/user
+    \end{lstlisting}
+          Send the request and observe the error indicating that a user identifier is required.
+    \item Remove \texttt{/user} from the path:
+          \begin{lstlisting}[language=HTTP]
+GET /api
+    \end{lstlisting}
+          Send the request and observe that it returns API documentation.
+    \item Right-click the response and select \textbf{Show response in browser}. Copy the generated URL.
+    \item Paste the URL into Burp's browser to access the interactive API documentation.
+    \item Locate the \texttt{DELETE} endpoint, enter \texttt{carlos} as the user identifier, and click \textbf{Send request} to delete the user and solve the lab.
+\end{enumerate}
+
+\newpage
+\nsection{Lab: Finding and Exploiting an Unused API Endpoint}
+
+\begin{enumerate}
+    \item Access the lab in Burp's browser and click on any product.
+    \item In \textbf{Proxy > HTTP history}, locate the API request associated with the product, for example:
+          \begin{lstlisting}[language=HTTP]
+GET /api/products/3/price
+    \end{lstlisting}
+    \item Right-click the request and select \textbf{Send to Repeater}.
+    \item Change the HTTP method from \texttt{GET} to \texttt{OPTIONS} and send the request. Observe that the response indicates that \texttt{GET} and \texttt{PATCH} methods are allowed.
+    \item Change the HTTP method to \texttt{PATCH} and send the request. Observe the \texttt{Unauthorized} response, indicating that authentication may be required.
+    \item Log in to the application using the credentials \texttt{wiener:peter}.
+    \item Open the \textbf{Lightweight "l33t" Leather Jacket} product.
+    \item In \textbf{Proxy > HTTP history}, locate the following request and send it to Repeater:
+          \begin{lstlisting}[language=HTTP]
+GET /api/products/1/price
+    \end{lstlisting}
+    \item Change the HTTP method to \texttt{PATCH} and send the request. Observe the error indicating that the expected Content-Type is \texttt{application/json}.
+    \item Add the following header:
+          \begin{lstlisting}[language=HTTP]
+Content-Type: application/json
+    \end{lstlisting}
+    \item Add an empty JSON object as the request body:
+          \begin{lstlisting}[language=JSON]
+{}
+    \end{lstlisting}
+          Send the request and observe the error indicating that the \texttt{price} parameter is required.
+    \item Add the \texttt{price} parameter with a value of \texttt{0}:
+          \begin{lstlisting}[language=JSON]
+{
+    "price": 0
+}
+    \end{lstlisting}
+    \item Send the request. In Burp's browser, reload the leather jacket product page and verify that its price is now \$0.00.
+    \item Add the leather jacket to your basket.
+    \item Open the basket and click \textbf{Place order} to solve the lab.
+\end{enumerate}
+
+\newpage
+\nsection{Lab: Exploiting a Mass Assignment Vulnerability}
+
+\begin{enumerate}
+    \item Log in to the application using the credentials \texttt{wiener:peter}.
+    \item Open the \textbf{Lightweight "l33t" Leather Jacket} product and add it to your basket.
+    \item Open the basket and click \textbf{Place order}. Observe that the account does not have enough credit to complete the purchase.
+    \item In \textbf{Proxy > HTTP history}, locate the GET and POST requests sent to \texttt{/api/checkout}.
+    \item Compare the JSON structures in both requests. Notice that the GET response contains a \texttt{chosen\_discount} parameter that is absent from the POST request.
+    \item Right-click the \texttt{POST /api/checkout} request and select \textbf{Send to Repeater}.
+    \item Add the \texttt{chosen\_discount} parameter to the JSON request body:
+          \begin{lstlisting}[language=JSON]
+{
+    "chosen_discount": {
+        "percentage": 0
+    },
+    "chosen_products": [
+        {
+            "product_id": "1",
+            "quantity": 1
+        }
+    ]
+}
+    \end{lstlisting}
+    \item Send the request and observe that adding the parameter does not cause an error.
+    \item Change the \texttt{chosen\_discount} value to the invalid string \texttt{"x"}:
+          \begin{lstlisting}[language=JSON]
+{
+    "chosen_discount": {
+        "percentage": "x"
+    },
+    "chosen_products": [
+        {
+            "product_id": "1",
+            "quantity": 1
+        }
+    ]
+}
+    \end{lstlisting}
+          Send the request and observe the error indicating that the percentage must be a number. This suggests that the parameter is being processed by the application.
+          \newpage
+    \item Change the discount percentage to \texttt{100}:
+          \begin{lstlisting}[language=JSON]
+{
+    "chosen_discount": {
+        "percentage": 100
+    },
+    "chosen_products": [
+        {
+            "product_id": "1",
+            "quantity": 1
+        }
+    ]
+}
+    \end{lstlisting}
+    \item Send the request to apply the discount and solve the lab.
+\end{enumerate}
+
+\newpage
+\nsection{Lab: Exploiting Server-Side Parameter Pollution in a Query String}
+
+\begin{enumerate}
+    \item In Burp's browser, trigger a password reset for the \texttt{administrator} user.
+    \item In \textbf{Proxy > HTTP history}, locate the \texttt{POST /forgot-password} request and the related JavaScript file:
+          \begin{lstlisting}
+/static/js/forgotPassword.js
+    \end{lstlisting}
+    \item Right-click the \texttt{POST /forgot-password} request and select \textbf{Send to Repeater}.
+    \item Resend the request to confirm that the response is consistent.
+    \item Change the \texttt{username} parameter to an invalid username, such as \texttt{administratorx}. Send the request and observe the \texttt{Invalid username} error.
+    \item Attempt to inject an additional parameter using a URL-encoded ampersand (\texttt{\%26}):
+          \begin{lstlisting}
+username=administrator%26x=y
+    \end{lstlisting}
+          Send the request and observe the \texttt{Parameter is not supported} error, suggesting that the internal API interpreted \texttt{x=y} as a separate parameter.
+    \item Attempt to truncate the server-side query string using a URL-encoded hash character (\texttt{\%23}):
+          \begin{lstlisting}
+username=administrator%23
+    \end{lstlisting}
+          Send the request and observe the \texttt{Field not specified} error, suggesting that the internal query contains an additional \texttt{field} parameter.
+    \item Inject a \texttt{field} parameter with an invalid value and truncate the remaining query string:
+          \begin{lstlisting}
+username=administrator%26field=x%23
+    \end{lstlisting}
+          Send the request and observe the \texttt{Invalid field} error, indicating that the injected parameter is recognized by the internal API.
+    \item Brute-force valid values for the \texttt{field} parameter:
+          \begin{enumerate}
+              \item Right-click the request and select \textbf{Send to Intruder}.
+              \item Set the payload position around the field value:
+                    \begin{lstlisting}
+username=administrator%26field=<PAYLOAD>%23
+        \end{lstlisting}
+              \item Under \textbf{Payload configuration}, select \textbf{Add from list}.
+              \item Choose the built-in \textbf{Server-side variable names} payload list.
+              \item Start the attack and review the results. Notice that the \texttt{username} and \texttt{email} payloads return HTTP \texttt{200} responses.
+          \end{enumerate}
+          \newpage
+    \item Set the \texttt{field} parameter to \texttt{email}:
+          \begin{lstlisting}
+username=administrator%26field=email%23
+    \end{lstlisting}
+          Send the request and observe that it returns the original response, confirming that \texttt{email} is a valid field.
+    \item In \textbf{Proxy > HTTP history}, inspect the \texttt{/static/js/forgotPassword.js} file. Identify the password reset endpoint:
+          \begin{lstlisting}[language=JavaScript]
+/forgot-password?reset_token=${resetToken}
+    \end{lstlisting}
+    \item Change the \texttt{field} parameter from \texttt{email} to \texttt{reset\_token}:
+          \begin{lstlisting}
+username=administrator%26field=reset_token%23
+    \end{lstlisting}
+          Send the request and retrieve the administrator's password reset token.
+    \item In Burp's browser, navigate to the password reset endpoint and supply the retrieved token:
+          \begin{lstlisting}
+/forgot-password?reset_token=YOUR_TOKEN
+    \end{lstlisting}
+    \item Set a new password for the administrator account.
+    \item Log in as \texttt{administrator} using the new password.
+    \item Navigate to the \textbf{Admin panel} and delete \texttt{carlos} to solve the lab.
+\end{enumerate}
+
+\end{document}
